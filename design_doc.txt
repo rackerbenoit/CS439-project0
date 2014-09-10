@@ -12,13 +12,13 @@ Slip days used: 0
 ****EACH student submits a (unique) design document.****
 
 ################
-YOUR PARTNER'S INFO
+Zoe Lamb
 ################
-Name1:
-EID1:
-CS login:
-Email:
-Unique Number:
+Name1: Zoe Lamb
+EID1: zl2866
+CS login: zoe
+Email: zlamb@utexas.edu
+Unique Number: 53005
 
 Your partner's ranking (scale below):
 
