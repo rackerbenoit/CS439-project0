@@ -60,29 +60,35 @@ int main(int argc, char **argv)
 static void 
 doFib(int n, int doPrint)
 {
-	if (doPrint)
-	{
-		
-		fprintf(stdout, "%d\n", );
-	}
-
+	int fib;
 	// base case
 	if (n == 0 || n == 1)
 		exit(n); 
 
 	pid_t pid;
+	pid_t pid2;
 	if ((pid = Fork()) == 0)		  
 	{
 		// child
-		doFib(n - 2, 0);	
-		
-	}
-	else
-	{
-		// parent
-		int *status;
-		waitpid(pid, &status, 0); 
 		doFib(n - 1, 0);
+	}
+
+	if (pid2 = Fork()) ==  0)
+	{
+		doFib(n - 2, 0);
+	}
+
+	else if (pid > 0 && pid2 > 0)
+	{
+		int* status, status 2;
+		waitpid(pid, &status, 0);
+		waitpid(pid2, &status2, 0);
+		fib = WEXITSTATUS(status) + WEXITSTATUS(status2);
+	}
+	
+	if (doPrint)
+	{
+		fprintf(stdout, "%d", fib);
 	}
 }
 
