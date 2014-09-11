@@ -63,7 +63,10 @@ doFib(int n, int doPrint)
 	int fib;
 	// base case
 	if (n == 0 || n == 1)
+	{
+		if (doPrint) fprintf(stdout, "%d\n", n);
 		exit(n); 
+	}
 
 	pid_t pid;
 	pid_t pid2;
@@ -73,23 +76,27 @@ doFib(int n, int doPrint)
 		doFib(n - 1, 0);
 	}
 
-	if (pid2 = Fork()) ==  0)
+	if ((pid2 = Fork()) ==  0)
 	{
+		// child
 		doFib(n - 2, 0);
 	}
 
-	else if (pid > 0 && pid2 > 0)
+	if (pid > 0 && pid2 > 0)
 	{
-		int* status, status 2;
-		waitpid(pid, &status, 0);
-		waitpid(pid2, &status2, 0);
+		// parent
+		int status;
+		int status2;
+		waitpid(-1, &status, 0);
+		waitpid(-1, &status2, 0);
 		fib = WEXITSTATUS(status) + WEXITSTATUS(status2);
+		if (doPrint)
+		{
+			fprintf(stdout, "%d\n", fib);
+		}
+		exit(fib);
 	}
 	
-	if (doPrint)
-	{
-		fprintf(stdout, "%d", fib);
-	}
 }
 
 pid_t Fork(void)
