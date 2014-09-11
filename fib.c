@@ -87,8 +87,8 @@ doFib(int n, int doPrint)
 		// parent
 		int status;
 		int status2;
-		waitpid(-1, &status, 0);
-		waitpid(-1, &status2, 0);
+		waitpid(pid, &status, 0);
+		waitpid(pid2, &status2, 0);
 		fib = WEXITSTATUS(status) + WEXITSTATUS(status2);
 		if (doPrint)
 		{
