@@ -11,7 +11,7 @@
 const int MAX = 13;
 
 static void doFib(int n, int doPrint);
-
+pid_t Fork(void);
 
 /*
  * unix_error - unix-style error routine.
@@ -60,7 +60,37 @@ int main(int argc, char **argv)
 static void 
 doFib(int n, int doPrint)
 {
-  
+	if (doPrint)
+	{
+		
+		fprintf(stdout, "%d\n", );
+	}
+
+	// base case
+	if (n == 0 || n == 1)
+		exit(n); 
+
+	pid_t pid;
+	if ((pid = Fork()) == 0)		  
+	{
+		// child
+		doFib(n - 2, 0);	
+		
+	}
+	else
+	{
+		// parent
+		int *status;
+		waitpid(pid, &status, 0); 
+		doFib(n - 1, 0);
+	}
 }
 
+pid_t Fork(void)
+{
+	pid_t pid;
 
+	if ((pid = fork()) < 0)
+		unix_error("Fork error");
+	return pid;
+}
