@@ -30,6 +30,20 @@ void handler(int sig)
    	exit(-999);	
 }
 
+// Zoe is driving
+void sigusr1_handler(int sig)
+{
+	//print "exiting"
+	ssize_t bytes; 
+	const int STDOUT = 1; 
+	bytes = write(STDOUT, "exiting\n", 10); 
+	if(bytes != 10) 
+   		exit(-999);	
+	
+	// exit with status = 1	
+	exit(1);	
+}
+
 //void alarmhandler(int sig)
 //{
 
@@ -45,6 +59,8 @@ int main(int argc, char **argv)
 
 	//Paul is driving
 	Signal(SIGINT, handler);
+	// Zoe is driving
+	Signal(SIGUSR1, sigusr1_handler);
 	//Signal(SIGALRM, alarmhandler);
 
 	struct timespec req;
