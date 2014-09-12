@@ -110,6 +110,18 @@ int main(int argc, char **argv)
     exit(0); /* control never reaches here */
 }
   
+/*
+ * Fork - fork() wrapper
+ *
+ */
+pid_t Fork(void)
+{
+        pid_t pid;
+        if ((pid = fork()) < 0)
+                unix_error("Fork error");
+        return pid;
+}
+
 /* 
  * eval - Evaluate the command line that the user has just typed in
  * 
@@ -123,7 +135,43 @@ int main(int argc, char **argv)
 */
 void eval(char *cmdline) 
 {
-    return;
+	char *argv[MAXARGS];
+        char buf[MAXLINE];
+        int bg;                 /* run in bg or fg? */
+        pid_t pid;
+
+        strcpy(buf, cmdline);
+        bg = parseline(buf, argv);
+        if (argv[0] == NULL)
+                return;         /* Ignore empty lines */
+
+	// Is not a built-in command
+        if (!builtin_cmd(argv))
+        {
+                if ((pid = Fork()) == 0)
+                { // child
+			// put child in new process group
+			setpgid(0, 0);
+			// load the program
+                        if (execv(argv[0], argv) < 0 )
+                        {
+                                printf("%s: Command not found.\n", argv[0]);
+                                exit(0);
+                        }
+                }
+
+
+                /* Parent waits for fg job to finish */
+                if (!bg)
+                {
+                        int status;
+                        if (waitpid(pid, &status, 0) < 0)
+                                unix_error("waitfg: waitpid error");
+                }
+                else // child is running in the bg
+                        printf("%d Process Running: %s", pid, cmdline);
+        }
+        return;				
 }
 
 
@@ -135,7 +183,17 @@ void eval(char *cmdline)
  */
 int builtin_cmd(char **argv) 
 {
-    return 0;     /* not a builtin command */
+	if (!strcmp(argv[0], "quit")) /* quit command */
+                exit(0);
+	if (!strcmp(argv[0], "jobs")) /* lists all background jobs */
+		listjobs(jobs);	
+	if (!strcmp(argv[0], "bg"))	/* runs <job> in the bg */
+		//do_bgfb(argv);	
+	if (!strcmp(argv[0], "fg"))	/* runs <job> in the fgh */
+		//do_bgfg(argv);	
+        if (!strcmp(argv[0], "&")) /* Ignore singleton & */
+                return 1;	
+	return 0;     /* not a builtin command */
 }
 
 /* 
