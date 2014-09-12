@@ -20,7 +20,7 @@ CS login: zoe
 Email: zlamb@utexas.edu
 Unique Number: 53005
 
-Your partner's ranking (scale below):
+Your partner's ranking (scale below): Excellent
 
 ################
 PARTNER EVALUATION SCALE
@@ -54,6 +54,7 @@ Preliminaries
   preparing your submission, other than the Linux documentation,
   course text, and lecture notes.
 
+Computer Systems A Programmer's Perspective by Bryant and O'Hallaron
 
 ################
 Questions regarding Part 0
@@ -63,8 +64,27 @@ Questions regarding Part 0
   the processes beginning with 0 (the original process) and incrementing for
   each child process.
 
+14 child processes. 
+Process 0 returns 5 
+Process 1a returns 3
+Process 1b returns 2
+Process 2a returns 1 
+Process 2b returns 1 
+Process 2c returns 1
+Process 2d returns 2
+PRocess 3a returns 0;
+Process 3b returns 1;
+Process 3c returns 0;
+Process 3d returns 1;
+Process 3e returns 1;
+Process 3f returns 1;
+Process 4a returns 0;
+Process 4b returns 1;
+
+Other process 2 retuns 1 from process
 (2) In part 0.3, which flavor of exec did you choose to use?  Why?
 
+ASK TA: We used execv not execve
 
 ################
 Questions regarding Part 1
