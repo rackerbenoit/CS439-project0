@@ -19,7 +19,13 @@
  */
 int main(int argc, char **argv)
 {
-  return 0;
+	/* print out this process's ID - Zoe is driving*/
+	pid_t pid;
+	pid = getpid();
+	printf(stdout, "This process's ID is %d\n", pid);
+ 	
+	
+	return 0;
 }
 
 
