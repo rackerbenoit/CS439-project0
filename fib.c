@@ -58,7 +58,7 @@ int main(int argc, char **argv)
  * doFib() exactly once.
  */
 static void 
-doFib(int n, int doPrint)
+doFib(int n, int doPrint) /* Zoe and Paul drove in this function */
 {
 	int fib;
 	// base case
@@ -99,6 +99,7 @@ doFib(int n, int doPrint)
 	
 }
 
+/* Zoe Drove Here */
 pid_t Fork(void)
 {
 	pid_t pid;
