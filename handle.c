@@ -30,21 +30,10 @@ void handler(int sig)
    	exit(-999);	
 }
 
-void alarmhandler(int sig)
-{
+//void alarmhandler(int sig)
+//{
 
-	struct timespec req;
-	req.tv_sec = 1;
-	struct timespec rem;
-	req.tv_nsec = 0;
-
-	int interrupt = nanosleep(&req, &rem); 
-	printf("%s", "Still here\n");
-	if(interrupt  == -1)
-	{
-		nanosleep(&rem, &rem);
-	}	
-}
+//}
 
 int main(int argc, char **argv)
 {
@@ -56,10 +45,22 @@ int main(int argc, char **argv)
 
 	//Paul is driving
 	Signal(SIGINT, handler);
-	Signal(SIGALRM, alarmhandler);
+	//Signal(SIGALRM, alarmhandler);
 
+	struct timespec req;
+	req.tv_sec = 1;
+	struct timespec rem;
+	req.tv_nsec = 0;
+
+	//alarm(1);
 	while(1){
-		alarm(1);
+		
+		int interrupt = nanosleep(&req, &rem); 
+		printf("%s", "Still here\n");
+		if(interrupt  == -1)
+		{
+			nanosleep(&rem, &rem);
+		}	
 	}
 	return 0;
 }
