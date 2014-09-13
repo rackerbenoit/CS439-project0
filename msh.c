@@ -139,6 +139,7 @@ void eval(char *cmdline)
         char buf[MAXLINE];
         int bg;                 /* run in bg or fg? */
         pid_t pid;
+	sigset_t mask;
 
         strcpy(buf, cmdline);
         bg = parseline(buf, argv);
@@ -148,8 +149,10 @@ void eval(char *cmdline)
 	// Is not a built-in command
         if (!builtin_cmd(argv))
         {
+		sigprocmask(SIG_BLOCK, &mask, NULL); // block
                 if ((pid = Fork()) == 0)
                 { // child
+			sigprocmask(SIG_UNBLOCK, &mask, NULL); // unblock in child
 			// put child in new process group
 			setpgid(0, 0);
 			// load the program
@@ -162,11 +165,11 @@ void eval(char *cmdline)
 
 
                 /* Parent waits for fg job to finish */
+		addjob(jobs, pid, bg, cmdline);
+		sigprocmask(SIG_UNBLOCK, &mask, NULL); // unblock in parent
                 if (!bg)
                 {
-                        int status;
-                        if (waitpid(pid, &status, 0) < 0)
-                                unix_error("waitfg: waitpid error");
+			waitfg(pid);
                 }
                 else // child is running in the bg
                         printf("%d Process Running: %s", pid, cmdline);
@@ -212,7 +215,12 @@ void do_bgfg(char **argv)
  */
 void waitfg(pid_t pid)
 {
-    return;
+	// while the pid is the fg process sleep the parent process
+	while (fgpid(jobs) == pid)
+	{
+		sleep(1);
+	}
+	return;
 }
 
 /*****************
@@ -226,9 +234,44 @@ void waitfg(pid_t pid)
  *     available zombie children, but doesn't wait for any other
  *     currently running children to terminate.  
  */
-void sigchld_handler(int sig) 
+void sigchld_handler(int sig) /* Zoe driving here */
 {
-    return;
+	pid_t pid;
+	int status;
+
+	// reap all terminated children, check for stopped children
+	while((pid = waitpid(-1, status, WNOHANG|WUNTRACED)) > 0)
+	{
+		int idx, sig_int;
+		char *terminated[] = "terminated by signal";
+		char *stopped[] = "stopped by signal";
+		char *text;
+	    	ssize_t bytes;
+	    	const int STDOUT = 1;
+		
+		// if child terminated b/c signal was not caught
+		if (WIFSIGNALED(status))
+		{
+			text = terminated;
+			sig_int = WTERMSIG(status); // get signal 
+		}
+		// if the child is stopped
+		else if (WIFSTOPPED(status))
+		{
+			text = stopped;
+			sig_int = WSTOPSIG(status); // get signal
+		}
+
+		bytes = write(STDOUT, ("Job [%d] (%d) %s %d", idx, pid, text, sig_int), 45);
+		if(bytes != 45)
+			exit(-999);
+		exit(1);
+	}	
+
+	
+	if (errno != ECHILD)
+		unix_error("waitpid error");	
+	return;
 }
 
 /* 
