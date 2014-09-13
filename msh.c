@@ -159,7 +159,7 @@ void eval(char *cmdline)
 				unix_error("setpgid error");		
 			}
 			// load the program
-                        if (execv(argv[0], argv) < 0 )
+                        if (execve(argv[0], argv, getenv(argv[0])) < 0 )
                         {
                                 printf("%s: Command not found.\n", argv[0]);
                                 exit(0);
@@ -175,7 +175,7 @@ void eval(char *cmdline)
 			waitfg(pid);
                 }
                 else // child is running in the bg
-                        printf("%d Process Running: %s", pid, cmdline);
+                        printf("[%d] (%d) %s", (*getjobpid(jobs, pid)).jid, pid, cmdline);
         }
         return;				
 }
@@ -308,12 +308,15 @@ void sigchld_handler(int sig) /* Zoe driving here */
 			sig_int = WSTOPSIG(status); // get signal
 		}
 
-		char string[45];
-		sprintf(string,"Job [%d] (%d) %s %d", idx, pid, text, sig_int);
-		bytes = write(STDOUT, string, 45);
-		if(bytes != 45)
-			exit(-999);
-		exit(1);
+        if(WIFSIGNALED(status) || WIFSTOPPED(status))
+        {
+    		char string[45];
+    		sprintf(string,"Job [%d] (%d) %s %d", idx, pid, text, sig_int);
+    		bytes = write(STDOUT, string, 45);
+    		if(bytes != 45)
+    			exit(-999);
+    		exit(1);
+        }
 	}	
 
 	
@@ -356,7 +359,7 @@ void sigtstp_handler(int sig)
     //If foreground job exists, suspend it
     if(pid != 0)
     {
-        if (kill(-pid, SIGTSTP) < 0)
+        if (kill(pid, SIGTSTP) < 0)
 		unix_error("kill error");
     }
 
