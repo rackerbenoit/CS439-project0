@@ -243,8 +243,8 @@ void sigchld_handler(int sig) /* Zoe driving here */
 	while((pid = waitpid(-1, status, WNOHANG|WUNTRACED)) > 0)
 	{
 		int idx, sig_int;
-		char *terminated[] = "terminated by signal";
-		char *stopped[] = "stopped by signal";
+		char terminated[] = "terminated by signal";
+		char stopped[] = "stopped by signal";
 		char *text;
 	    	ssize_t bytes;
 	    	const int STDOUT = 1;
@@ -279,10 +279,17 @@ void sigchld_handler(int sig) /* Zoe driving here */
  *    user types ctrl-c at the keyboard.  Catch it and send it along
  *    to the foreground job.  
  */
+ //Paul is Driving
 void sigint_handler(int sig) 
 {
-    
     pid_t pid = fgpid(jobs);
+
+    //Kills foreground job is there a foreground job running
+    if(pid != 0)
+    {
+        kill(-pid, SIGINT);
+    }
+
     return;
 }
 
@@ -291,8 +298,17 @@ void sigint_handler(int sig)
  *     the user types ctrl-z at the keyboard. Catch it and suspend the
  *     foreground job by sending it a SIGTSTP.  
  */
+ //Paul is Driving
 void sigtstp_handler(int sig) 
 {
+    pid_t pid = fgpid(jobs);
+
+    //If foreground job exists, suspend it
+    if(pid != 0)
+    {
+        kill(-pid, SIGTSTP);
+    }
+
     return;
 }
 
