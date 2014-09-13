@@ -154,7 +154,10 @@ void eval(char *cmdline)
                 { // child
 			sigprocmask(SIG_UNBLOCK, &mask, NULL); // unblock in child
 			// put child in new process group
-			setpgid(0, 0);
+			if (setpgid(0, 0) < 0)
+			{
+				unix_error("setpgid error");		
+			}
 			// load the program
                         if (execv(argv[0], argv) < 0 )
                         {
@@ -191,7 +194,7 @@ int builtin_cmd(char **argv)
 	if (!strcmp(argv[0], "jobs")) /* lists all background jobs */
 		listjobs(jobs);	
 	if (!strcmp(argv[0], "bg"))	/* runs <job> in the bg */
-		do_bgfb(argv);	
+		do_bgfg(argv);	
 	if (!strcmp(argv[0], "fg"))	/* runs <job> in the fgh */
 		do_bgfg(argv);	
         if (!strcmp(argv[0], "&")) /* Ignore singleton & */
@@ -226,7 +229,8 @@ void do_bgfg(char **argv)
     if(strcmp(argv[0], "bg"))
     {
         if((*currentJob).state == ST){
-            kill(-pid, SIGCONT); //TODO This should continue all processes in this pid group?
+            if (kill(-pid, SIGCONT) < 0) //TODO This should continue all processes in this pid group?
+		unix_error("kill error");
         }
         (*currentJob).state = BG;
     }
@@ -234,7 +238,8 @@ void do_bgfg(char **argv)
     else if(strcmp(argv[0], "fg"))
     {
         if((*currentJob).state == ST){
-            kill(-pid, SIGCONT); //TODO Continue process if stopped
+            if (kill(-pid, SIGCONT) < 0) //TODO Continue process if stopped
+		unix_error("kill error");
         }
 
         (*currentJob).state = FG;
@@ -280,21 +285,21 @@ void sigchld_handler(int sig) /* Zoe driving here */
 		char terminated[] = "terminated by signal";
 		char stopped[] = "stopped by signal";
 		char *text;
-	    ssize_t bytes;
-	    const int STDOUT = 1;
+	    	ssize_t bytes;
+	    	const int STDOUT = 1;
 
-        //Delete jobs if the job terminated
-        if(WIFEXITED(status))
-        {
-            deletejobs(jobs, pid);
-        }
+		//Delete jobs if the job terminated
+		if(WIFEXITED(status))
+		{
+		    deletejob(jobs, pid);
+		}
 		
 		// if child terminated b/c signal was not caught
 		if (WIFSIGNALED(status))
 		{
 			text = terminated;
 			sig_int = WTERMSIG(status); // get signal
-            deletejobs(jobs, pid); //Signals we cannot handle
+            		deletejob(jobs, pid); //Signals we cannot handle
 		}
 		// if the child is stopped
 		else if (WIFSTOPPED(status))
@@ -303,8 +308,8 @@ void sigchld_handler(int sig) /* Zoe driving here */
 			sig_int = WSTOPSIG(status); // get signal
 		}
 
-        char string[45];
-        sprintf(string,"Job [%d] (%d) %s %d", idx, pid, text, sig_int);
+		char string[45];
+		sprintf(string,"Job [%d] (%d) %s %d", idx, pid, text, sig_int);
 		bytes = write(STDOUT, string, 45);
 		if(bytes != 45)
 			exit(-999);
@@ -330,7 +335,8 @@ void sigint_handler(int sig)
     //Kills foreground job is there a foreground job running
     if(pid != 0)
     {
-        kill(-pid, SIGINT);
+        if (kill(-pid, SIGINT) < 0)
+		unix_error("kill error");
         deletejob(jobs, pid);
     }
 
@@ -350,7 +356,8 @@ void sigtstp_handler(int sig)
     //If foreground job exists, suspend it
     if(pid != 0)
     {
-        kill(-pid, SIGTSTP);
+        if (kill(-pid, SIGTSTP) < 0)
+		unix_error("kill error");
     }
 
     struct job_t *currentJob = getjobpid(jobs, pid);
