@@ -188,9 +188,9 @@ int builtin_cmd(char **argv)
 	if (!strcmp(argv[0], "jobs")) /* lists all background jobs */
 		listjobs(jobs);	
 	if (!strcmp(argv[0], "bg"))	/* runs <job> in the bg */
-		//do_bgfb(argv);	
+		do_bgfb(argv);	
 	if (!strcmp(argv[0], "fg"))	/* runs <job> in the fgh */
-		//do_bgfg(argv);	
+		do_bgfg(argv);	
         if (!strcmp(argv[0], "&")) /* Ignore singleton & */
                 return 1;	
 	return 0;     /* not a builtin command */
@@ -198,9 +198,12 @@ int builtin_cmd(char **argv)
 
 /* 
  * do_bgfg - Execute the builtin bg and fg commands
+ * Paul is driving
  */
 void do_bgfg(char **argv) 
 {
+
+    //kill(argv[1], SIGCONT);
     return;
 }
 
@@ -235,6 +238,8 @@ void sigchld_handler(int sig)
  */
 void sigint_handler(int sig) 
 {
+    
+    pid_t pid = fgpid(jobs);
     return;
 }
 
