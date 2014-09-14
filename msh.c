@@ -112,7 +112,7 @@ int main(int argc, char **argv)
   
 /*
  * Fork - fork() wrapper
- *
+ * Paul drove here
  */
 pid_t Fork(void)
 {
@@ -135,6 +135,7 @@ pid_t Fork(void)
 */
 void eval(char *cmdline) 
 {
+	//Zoe drove here
 	char *argv[MAXARGS];
         char buf[MAXLINE];
         int bg;                 /* run in bg or fg? */
@@ -166,7 +167,7 @@ void eval(char *cmdline)
                         }
                 }
 
-
+		//Paul did some driving here
                 /* Parent waits for fg job to finish */
 		addjob(jobs, pid, bg+1, cmdline);
 		sigprocmask(SIG_UNBLOCK, &mask, NULL); // unblock in parent
@@ -187,6 +188,7 @@ void eval(char *cmdline)
  * Return 1 if a builtin command was executed; return 0
  * if the argument passed in is *not* a builtin command.
  */
+//Zoe drove for this function
 int builtin_cmd(char **argv) 
 {
 	if (!strcmp(argv[0], "quit")) /* quit command */
@@ -224,7 +226,7 @@ void do_bgfg(char **argv)
     {
         pid = (pid_t)atoi(argv[1]);
     }
-
+    //Zoe drove in the error hadling areas in this function
     struct job_t *currentJob = getjobpid(jobs, pid);
     if(strcmp(argv[0], "bg"))
     {
@@ -252,6 +254,7 @@ void do_bgfg(char **argv)
 /* 
  * waitfg - Block until process pid is no longer the foreground process
  */
+//Paul drove here
 void waitfg(pid_t pid)
 {
 	// while the pid is the fg process sleep the parent process
@@ -339,7 +342,7 @@ void sigint_handler(int sig)
     if(pid != 0)
     {
         if (kill(-pid, SIGINT) < 0)
-		unix_error("kill error");
+		unix_error("kill error");//Error handling
         deletejob(jobs, pid);
     }
 

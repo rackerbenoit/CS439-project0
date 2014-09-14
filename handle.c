@@ -20,7 +20,6 @@
 
 
 //Paul is driving
-
 void handler(int sig)
 {
 	ssize_t bytes; 
@@ -56,10 +55,7 @@ int main(int argc, char **argv)
 	pid = getpid();
 	fprintf(stdout, "This process's ID is %d\n", pid);
 	
-
-	//Paul is driving
 	Signal(SIGINT, handler);
-	// Zoe is driving
 	Signal(SIGUSR1, sigusr1_handler);
 	//Signal(SIGALRM, alarmhandler);
 
@@ -67,7 +63,8 @@ int main(int argc, char **argv)
 	req.tv_sec = 1;
 	struct timespec rem;
 	req.tv_nsec = 0;
-
+	
+	//Paul is driving
 	//alarm(1);
 	while(1){
 		
@@ -80,5 +77,4 @@ int main(int argc, char **argv)
 	}
 	return 0;
 }
-
 
