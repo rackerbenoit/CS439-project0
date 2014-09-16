@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <math.h>
 #include "util.h"
 #include "jobs.h"
 
@@ -222,9 +223,20 @@ void do_bgfg(char **argv)
     // check for no <job> argument
     if (argv[1] == NULL)
     {
-        write(1, strcat(argv[0]," command requires PID or %%jobid"), strlen(strcat(argv[0], " command requires PID or %%jobid")));  
+	fprintf(stdout, "%s command requires PID or %%jobid argument\n", argv[0]);
 
 	return;
+    }
+
+    // see if the <job> contains letters	
+    int i;
+    for (i = 0; i < strlen(argv[1]); i++)
+    {
+	if (isalpha(argv[1][i]))
+	{
+	    fprintf(stdout, "%s: argument must be a PID or %%jobid\n", argv[0]);
+	    return;
+	}
     }
 
     pid_t pid;
@@ -232,48 +244,57 @@ void do_bgfg(char **argv)
     char firstChar = *firstCharPtr; // get the first char
     char percent = '%'; //ascii value 37
     struct job_t *j;
+    int isJID = 0; //FALSE
 
     // parse if is in the form of a JID
     if(firstChar == percent)
     {
-	fprintf(stdout, "Here now\n");
+//	fprintf(stdout, "Here now\n");
+	isJID = 1;
 	firstCharPtr++;
 	int jid = atoi(firstCharPtr);
         j = getjobjid(jobs, jid); //(pid_t)atoi(string);
-	//pid = j->pid;
     }
-
-    //If in form of pid
-    else
+    else //If in form of pid
     {
-	fprintf(stdout, "Got here\n");
+//	fprintf(stdout, "Got here\n");
         pid = (pid_t)atoi(argv[1]);
 	j = getjobpid(jobs, pid);
     }
 
+
     // if the job does not exist
     if (j == NULL)  
     {
-	fprintf(stdout, "%s: argument must be a PID of %%jobid\n", argv[0]);
-	return;
+	if (isJID) // if the JID is not valid
+	{
+	    fprintf(stdout, "%s: No such job\n", argv[1]); 
+	    return;
+	}
+	// else we were given an invalid PID
+	else
+	    fprintf(stdout, "(%d): No such process\n", pid);
+	    return;
     }
+    pid = j->pid;
 
     //Zoe drove in the error hadling areas in this function
     if(!strcmp(argv[0], "bg"))
     {
-	fprintf(stdout, "bg job\n");
+//	fprintf(stdout, "bg job\n");
         if((*j).state == ST){
-            if (kill(-pid, SIGCONT) < 0) //TODO This should continue all processes in this pid group?
+            if (kill(-pid, SIGCONT) < 0) 
 		unix_error("kill error");
         }
         (*j).state = BG;
+        printf("[%d] (%d) %s", (*j).jid, pid, (*j).cmdline);
     }
 
     else if(!strcmp(argv[0], "fg"))
     {
-	fprintf(stdout, "fg job\n");
+//	fprintf(stdout, "fg job\n");
         if((*j).state == ST){
-            if (kill(-pid, SIGCONT) < 0) //TODO Continue process if stopped
+            if (kill(-pid, SIGCONT) < 0) 
 		unix_error("kill error");
         }
 
@@ -353,7 +374,22 @@ void sigchld_handler(int sig) /* Zoe driving here */
 
 		if(WIFSIGNALED(status) || WIFSTOPPED(status))
 		{
+		/*	char c1 = "Job [";
+			char c2 = "] (";
+			char c3 = ") ";
+			char end = "\n"; */
 			char string[45];
+			/*int length;	
+			char *c;
+			length = log10(idx) + 1;
+			c = malloc(length);
+			snprintf(c, length, "%d", idx);
+			write(1, c, strlen(c));
+		*/	
+			/* TODO: this prints out garbage on trace16, need to figure
+			out another way to print this. maybe look into strcat or how 
+			to convert ints to strings/chars? */ 		
+
 			sprintf(string,"Job [%d] (%d) %s %d\n", idx, pid, text, sig_int);
 			bytes = write(STDOUT, string, 45);
 			if(bytes != 45)
