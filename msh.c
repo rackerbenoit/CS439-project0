@@ -146,24 +146,24 @@ void eval(char *cmdline)
         bg = parseline(buf, argv);
         if (argv[0] == NULL)
                 return;         /* Ignore empty lines */
-
 	// Is not a built-in command
         if (!builtin_cmd(argv))
         {
+		sigemptyset(&mask);
+		sigaddset(&mask, SIGCHLD);
 		sigprocmask(SIG_BLOCK, &mask, NULL); // block
+		
                 if ((pid = Fork()) == 0)
                 { // child
 			sigprocmask(SIG_UNBLOCK, &mask, NULL); // unblock in child
 			// put child in new process group
 			if (setpgid(0, 0) < 0)
-			{
-				unix_error("setpgid error");		
-			}
+				unix_error("setpgid error");	
 			// load the program
-                        if (execve(argv[0], argv, getenv(argv[0])) < 0 )
+                        if (execve(argv[0], argv, environ) < 0 )
                         {
                                 printf("%s: Command not found.\n", argv[0]);
-                                exit(0);
+                               exit(0);
                         }
                 }
 
@@ -172,7 +172,7 @@ void eval(char *cmdline)
 		addjob(jobs, pid, bg+1, cmdline);
 		sigprocmask(SIG_UNBLOCK, &mask, NULL); // unblock in parent
                 if (!bg)
-                {
+                {	
 			waitfg(pid);
                 }
                 else // child is running in the bg
@@ -194,11 +194,20 @@ int builtin_cmd(char **argv)
 	if (!strcmp(argv[0], "quit")) /* quit command */
                 exit(0);
 	if (!strcmp(argv[0], "jobs")) /* lists all background jobs */
+	{
 		listjobs(jobs);	
+		return 1;
+	}
 	if (!strcmp(argv[0], "bg"))	/* runs <job> in the bg */
+	{
 		do_bgfg(argv);	
+		return 1;
+	}
 	if (!strcmp(argv[0], "fg"))	/* runs <job> in the fgh */
+	{
 		do_bgfg(argv);	
+		return 1;
+	}
         if (!strcmp(argv[0], "&")) /* Ignore singleton & */
                 return 1;	
 	return 0;     /* not a builtin command */
@@ -221,11 +230,13 @@ void do_bgfg(char **argv)
         string++;
         pid = (pid_t)atoi(string);
     }
+
     //If pid is passed in
     else
     {
         pid = (pid_t)atoi(argv[1]);
     }
+
     //Zoe drove in the error hadling areas in this function
     struct job_t *currentJob = getjobpid(jobs, pid);
     if(strcmp(argv[0], "bg"))
@@ -257,9 +268,12 @@ void do_bgfg(char **argv)
 //Paul drove here
 void waitfg(pid_t pid)
 {
+	struct job_t *j = getjobpid(jobs, pid);
 	// while the pid is the fg process sleep the parent process
-	while (fgpid(jobs) == pid)
+	while (j != NULL)//fgpid(jobs) == pid)
 	{
+		// update j to see if the job still exists
+		j = getjobpid(jobs, pid);	
 		sleep(1);
 	}
 	return;
@@ -290,12 +304,15 @@ void sigchld_handler(int sig) /* Zoe driving here */
 		char *text;
 	    	ssize_t bytes;
 	    	const int STDOUT = 1;
+		idx = (getjobpid(jobs, pid))->jid;
 
 		//Delete jobs if the job terminated
 		if(WIFEXITED(status))
 		{
+			text = terminated;
+			sig_int = WEXITSTATUS(status);
 		    deletejob(jobs, pid);
-		}
+		}  
 		
 		// if child terminated b/c signal was not caught
 		if (WIFSIGNALED(status))
@@ -305,26 +322,32 @@ void sigchld_handler(int sig) /* Zoe driving here */
             		deletejob(jobs, pid); //Signals we cannot handle
 		}
 		// if the child is stopped
-		else if (WIFSTOPPED(status))
+		if (WIFSTOPPED(status))
 		{
 			text = stopped;
 			sig_int = WSTOPSIG(status); // get signal
 		}
 
-        if(WIFSIGNALED(status) || WIFSTOPPED(status))
-        {
-    		char string[45];
-    		sprintf(string,"Job [%d] (%d) %s %d", idx, pid, text, sig_int);
-    		bytes = write(STDOUT, string, 45);
-    		if(bytes != 45)
-    			exit(-999);
-    		exit(1);
-        }
+		if(WIFSIGNALED(status) || WIFSTOPPED(status))
+		{
+			char string[45];
+			sprintf(string,"Job [%d] (%d) %s %d\n", idx, pid, text, sig_int);
+			bytes = write(STDOUT, string, 45);
+			if(bytes != 45)
+				exit(-999);
+		}
 	}	
 
 	
 	if (errno != ECHILD)
-		unix_error("waitpid error");	
+	{
+		if (errno == EINTR)
+		{
+			Signal(sig, sigchld_handler);	
+		}
+		else
+			unix_error("waitpid error");	
+	}
 	return;
 }
 
@@ -339,11 +362,10 @@ void sigint_handler(int sig)
     pid_t pid = fgpid(jobs);
 
     //Kills foreground job is there a foreground job running
-    if(pid != 0)
+    if(pid > 0)
     {
-        if (kill(-pid, SIGINT) < 0)
+       if(kill(-pid, SIGINT) > 0) 
 		unix_error("kill error");//Error handling
-        deletejob(jobs, pid);
     }
 
     return;
