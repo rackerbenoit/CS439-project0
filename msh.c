@@ -219,43 +219,66 @@ int builtin_cmd(char **argv)
  */
 void do_bgfg(char **argv) 
 {
-    pid_t pid;
-    char *string = argv[1];
-    char *firstChar = "";
-    sprintf(firstChar, "%c", *string);
-
-    //if jid is passed in
-    if(strcmp(firstChar, "%"))
+    // check for no <job> argument
+    if (argv[1] == NULL)
     {
-        string++;
-        pid = (pid_t)atoi(string);
+        write(1, strcat(argv[0]," command requires PID or %%jobid"), strlen(strcat(argv[0], " command requires PID or %%jobid")));  
+
+	return;
     }
 
-    //If pid is passed in
+    pid_t pid;
+    char *firstCharPtr = argv[1]; // set ptr to start of <job> 
+    char firstChar = *firstCharPtr; // get the first char
+    char percent = '%'; //ascii value 37
+    struct job_t *j;
+
+    // parse if is in the form of a JID
+    if(firstChar == percent)
+    {
+	fprintf(stdout, "Here now\n");
+	firstCharPtr++;
+	int jid = atoi(firstCharPtr);
+        j = getjobjid(jobs, jid); //(pid_t)atoi(string);
+	//pid = j->pid;
+    }
+
+    //If in form of pid
     else
     {
+	fprintf(stdout, "Got here\n");
         pid = (pid_t)atoi(argv[1]);
+	j = getjobpid(jobs, pid);
+    }
+
+    // if the job does not exist
+    if (j == NULL)  
+    {
+	fprintf(stdout, "%s: argument must be a PID of %%jobid\n", argv[0]);
+	return;
     }
 
     //Zoe drove in the error hadling areas in this function
-    struct job_t *currentJob = getjobpid(jobs, pid);
-    if(strcmp(argv[0], "bg"))
+    if(!strcmp(argv[0], "bg"))
     {
-        if((*currentJob).state == ST){
+	fprintf(stdout, "bg job\n");
+        if((*j).state == ST){
             if (kill(-pid, SIGCONT) < 0) //TODO This should continue all processes in this pid group?
 		unix_error("kill error");
         }
-        (*currentJob).state = BG;
+        (*j).state = BG;
     }
 
-    else if(strcmp(argv[0], "fg"))
+    else if(!strcmp(argv[0], "fg"))
     {
-        if((*currentJob).state == ST){
+	fprintf(stdout, "fg job\n");
+        if((*j).state == ST){
             if (kill(-pid, SIGCONT) < 0) //TODO Continue process if stopped
 		unix_error("kill error");
         }
 
-        (*currentJob).state = FG;
+        (*j).state = FG;
+	waitfg(pid);
 
     }
 
@@ -268,12 +291,9 @@ void do_bgfg(char **argv)
 //Paul drove here
 void waitfg(pid_t pid)
 {
-	struct job_t *j = getjobpid(jobs, pid);
 	// while the pid is the fg process sleep the parent process
-	while (j != NULL)//fgpid(jobs) == pid)
+	while (fgpid(jobs) == pid)
 	{
-		// update j to see if the job still exists
-		j = getjobpid(jobs, pid);	
 		sleep(1);
 	}
 	return;
@@ -324,6 +344,9 @@ void sigchld_handler(int sig) /* Zoe driving here */
 		// if the child is stopped
 		if (WIFSTOPPED(status))
 		{
+			
+		    struct job_t *currentJob = getjobpid(jobs, pid);
+		    (*currentJob).state = ST; 
 			text = stopped;
 			sig_int = WSTOPSIG(status); // get signal
 		}
@@ -388,8 +411,6 @@ void sigtstp_handler(int sig)
 		unix_error("kill error");
     }
 
-    struct job_t *currentJob = getjobpid(jobs, pid);
-    (*currentJob).state = ST; 
 
     return;
 }
