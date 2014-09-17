@@ -136,49 +136,52 @@ pid_t Fork(void)
 */
 void eval(char *cmdline) 
 {
-	//Zoe drove here
-	char *argv[MAXARGS];
+	    //Zoe drove here
+	    char *argv[MAXARGS];
         char buf[MAXLINE];
         int bg;                 /* run in bg or fg? */
         pid_t pid;
-	sigset_t mask;
+    	sigset_t mask;
 
         strcpy(buf, cmdline);
         bg = parseline(buf, argv);
         if (argv[0] == NULL)
                 return;         /* Ignore empty lines */
-	// Is not a built-in command
+
+	    // Is not a built-in command
         if (!builtin_cmd(argv))
         {
-		sigemptyset(&mask);
-		sigaddset(&mask, SIGCHLD);
-		sigprocmask(SIG_BLOCK, &mask, NULL); // block
+        		sigemptyset(&mask);
+        		sigaddset(&mask, SIGCHLD);
+        		sigprocmask(SIG_BLOCK, &mask, NULL); // block
 		
                 if ((pid = Fork()) == 0)
                 { // child
-			sigprocmask(SIG_UNBLOCK, &mask, NULL); // unblock in child
-			// put child in new process group
-			if (setpgid(0, 0) < 0)
-				unix_error("setpgid error");	
-			// load the program
-                        if (execve(argv[0], argv, environ) < 0 )
-                        {
-                                printf("%s: Command not found.\n", argv[0]);
-                               exit(0);
-                        }
+			         sigprocmask(SIG_UNBLOCK, &mask, NULL); // unblock in child
+			         // put child in new process group
+			         if (setpgid(0, 0) < 0)
+				            unix_error("setpgid error");	
+			         // load the program
+                     if (execve(argv[0], argv, environ) < 0 )
+                     {
+                            printf("%s: Command not found.\n", argv[0]);
+                            exit(0);
+                     }
                 }
 
 		//Paul did some driving here
                 /* Parent waits for fg job to finish */
 		addjob(jobs, pid, bg+1, cmdline);
 		sigprocmask(SIG_UNBLOCK, &mask, NULL); // unblock in parent
-                if (!bg)
-                {	
-			waitfg(pid);
-                }
-                else // child is running in the bg
-                        printf("[%d] (%d) %s", (*getjobpid(jobs, pid)).jid, pid, cmdline);
+
+        //Enters if there is a foreground process
+        if (!bg){	
+		        waitfg(pid);
         }
+        else // child is running in the bg
+                printf("[%d] (%d) %s", (*getjobpid(jobs, pid)).jid, pid, cmdline);
+        }
+
         return;				
 }
 
@@ -223,20 +226,19 @@ void do_bgfg(char **argv)
     // check for no <job> argument
     if (argv[1] == NULL)
     {
-	fprintf(stdout, "%s command requires PID or %%jobid argument\n", argv[0]);
-
-	return;
+	    fprintf(stdout, "%s command requires PID or %%jobid argument\n", argv[0]);
+        return;
     }
 
     // see if the <job> contains letters	
     int i;
     for (i = 0; i < strlen(argv[1]); i++)
     {
-	if (isalpha(argv[1][i]))
-	{
-	    fprintf(stdout, "%s: argument must be a PID or %%jobid\n", argv[0]);
-	    return;
-	}
+	   if (isalpha(argv[1][i]))
+	   {
+	       fprintf(stdout, "%s: argument must be a PID or %%jobid\n", argv[0]);
+	       return;
+	   }
     }
 
     pid_t pid;
@@ -249,42 +251,42 @@ void do_bgfg(char **argv)
     // parse if is in the form of a JID
     if(firstChar == percent)
     {
-//	fprintf(stdout, "Here now\n");
-	isJID = 1;
-	firstCharPtr++;
-	int jid = atoi(firstCharPtr);
+        //fprintf(stdout, "Here now\n");
+    	isJID = 1;
+    	firstCharPtr++;
+    	int jid = atoi(firstCharPtr);
         j = getjobjid(jobs, jid); //(pid_t)atoi(string);
     }
     else //If in form of pid
     {
-//	fprintf(stdout, "Got here\n");
+        //fprintf(stdout, "Got here\n");
         pid = (pid_t)atoi(argv[1]);
-	j = getjobpid(jobs, pid);
+    	j = getjobpid(jobs, pid);
     }
 
 
     // if the job does not exist
-    if (j == NULL)  
-    {
-	if (isJID) // if the JID is not valid
-	{
-	    fprintf(stdout, "%s: No such job\n", argv[1]); 
-	    return;
-	}
-	// else we were given an invalid PID
-	else
-	    fprintf(stdout, "(%d): No such process\n", pid);
-	    return;
+    if (j == NULL){
+	   if (isJID) // if the JID is not valid
+	   {
+	       fprintf(stdout, "%s: No such job\n", argv[1]); 
+	       return;
+	   }
+	   // else we were given an invalid PID
+	   else
+	       fprintf(stdout, "(%d): No such process\n", pid);
+	   return;
     }
+
     pid = j->pid;
 
     //Zoe drove in the error hadling areas in this function
     if(!strcmp(argv[0], "bg"))
     {
-//	fprintf(stdout, "bg job\n");
+        //fprintf(stdout, "bg job\n");
         if((*j).state == ST){
-            if (kill(-pid, SIGCONT) < 0) 
-		unix_error("kill error");
+              if (kill(-pid, SIGCONT) < 0) 
+		      unix_error("kill error");
         }
         (*j).state = BG;
         printf("[%d] (%d) %s", (*j).jid, pid, (*j).cmdline);
@@ -292,17 +294,15 @@ void do_bgfg(char **argv)
 
     else if(!strcmp(argv[0], "fg"))
     {
-//	fprintf(stdout, "fg job\n");
+        //fprintf(stdout, "fg job\n");
         if((*j).state == ST){
-            if (kill(-pid, SIGCONT) < 0) 
-		unix_error("kill error");
+              if (kill(-pid, SIGCONT) < 0) 
+		      unix_error("kill error");
         }
 
         (*j).state = FG;
-	waitfg(pid);
-
+	    waitfg(pid);
     }
-
     return;
 }
 
@@ -343,8 +343,8 @@ void sigchld_handler(int sig) /* Zoe driving here */
 		char terminated[] = "terminated by signal";
 		char stopped[] = "stopped by signal";
 		char *text;
-	    	ssize_t bytes;
-	    	const int STDOUT = 1;
+	    ssize_t bytes;
+	    const int STDOUT = 1;
 		idx = (getjobpid(jobs, pid))->jid;
 
 		//Delete jobs if the job terminated
@@ -372,25 +372,27 @@ void sigchld_handler(int sig) /* Zoe driving here */
 			sig_int = WSTOPSIG(status); // get signal
 		}
 
+        //If the child is stopped OR terminated b/c signal was ignored
 		if(WIFSIGNALED(status) || WIFSTOPPED(status))
 		{
 		/*	char c1 = "Job [";
 			char c2 = "] (";
 			char c3 = ") ";
-			char end = "\n"; */
-			char string[45];
-			/*int length;	
+			char end = "\n";
+			int length;	
 			char *c;
 			length = log10(idx) + 1;
 			c = malloc(length);
 			snprintf(c, length, "%d", idx);
 			write(1, c, strlen(c));
 		*/	
+            char string[45];
 			/* TODO: this prints out garbage on trace16, need to figure
 			out another way to print this. maybe look into strcat or how 
 			to convert ints to strings/chars? */ 		
 
 			sprintf(string,"Job [%d] (%d) %s %d\n", idx, pid, text, sig_int);
+            //memset(string, '\0', sizeof(string));
 			bytes = write(STDOUT, string, 45);
 			if(bytes != 45)
 				exit(-999);

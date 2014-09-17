@@ -84,7 +84,7 @@ Process 4b returns 1;
 Other process 2 retuns 1 from process
 (2) In part 0.3, which flavor of exec did you choose to use?  Why?
 
-ASK TA: We used execv not execve
+We used execv since we did not need to utilize the environment variable.
 
 ################
 Questions regarding Part 1
