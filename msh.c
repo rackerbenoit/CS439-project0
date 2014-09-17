@@ -386,16 +386,20 @@ void sigchld_handler(int sig) /* Zoe driving here */
 			snprintf(c, length, "%d", idx);
 			write(1, c, strlen(c));
 		*/	
-            char string[45];
+            char string[60];
+            int i;
+            for(i = 0; i < 60; i++)
+            {
+                string[i] = NULL;
+            }
 			/* TODO: this prints out garbage on trace16, need to figure
 			out another way to print this. maybe look into strcat or how 
 			to convert ints to strings/chars? */ 		
 
-            //int length = strlen(idx) + strlen(pid) + strlen(text) + strlen(sig_int);
 			sprintf(string,"Job [%d] (%d) %s %d\n", idx, pid, text, sig_int);
             //memset(string, '\0', sizeof(string));
-			bytes = write(STDOUT, string, 40);
-			if(bytes != 40)
+			bytes = write(STDOUT, string, 60);
+			if(bytes != 60)
 				exit(-999);
 		}
 	}	
