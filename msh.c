@@ -391,10 +391,11 @@ void sigchld_handler(int sig) /* Zoe driving here */
 			out another way to print this. maybe look into strcat or how 
 			to convert ints to strings/chars? */ 		
 
+            //int length = strlen(idx) + strlen(pid) + strlen(text) + strlen(sig_int);
 			sprintf(string,"Job [%d] (%d) %s %d\n", idx, pid, text, sig_int);
             //memset(string, '\0', sizeof(string));
-			bytes = write(STDOUT, string, 45);
-			if(bytes != 45)
+			bytes = write(STDOUT, string, 40);
+			if(bytes != 40)
 				exit(-999);
 		}
 	}	
