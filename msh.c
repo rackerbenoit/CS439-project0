@@ -115,7 +115,7 @@ int main(int argc, char **argv)
  * Fork - fork() wrapper
  * Paul drove here
  * Taken from Bryant & O'Hall page 718 */
- */
+
 pid_t Fork(void)
 {
         pid_t pid;
@@ -381,31 +381,25 @@ void sigchld_handler(int sig) /* Zoe driving here */
         //If the child is stopped OR terminated b/c signal was ignored
 		if(WIFSIGNALED(status) || WIFSTOPPED(status))
 		{
-		/*	char c1 = "Job [";
-			char c2 = "] (";
-			char c3 = ") ";
-			char end = "\n";
-			int length;	
-			char *c;
-			length = log10(idx) + 1;
-			c = malloc(length);
-			snprintf(c, length, "%d", idx);
-			write(1, c, strlen(c));
-		*/	
-            char string[60];
+		/* Paul driving */
+            /*char string[60];
             int i;
             for(i = 0; i < 60; i++)
             {
                 string[i] = NULL;
             }
-			/* TODO: this prints out garbage on trace16, need to figure
-			out another way to print this. maybe look into strcat or how 
-			to convert ints to strings/chars? */ 		
-
-			sprintf(string,"Job [%d] (%d) %s %d\n", idx, pid, text, sig_int);
+		*/	
+			// Zoe driving
+			char nullstring[] = "job";
+			int size = 1;
+			// If the string is truncated snprintf returns the number of chars required
+                        int num_chars = snprintf(nullstring, size, "Job [%d] (%d) %s %d\n", idx, pid, text, sig_int);
+			num_chars++; // was leaving off the '\n'
+                        char string[num_chars];
+                        snprintf(string, num_chars, "Job [%d] (%d) %s %d\n", idx, pid, text, sig_int);
             //memset(string, '\0', sizeof(string));
-			bytes = write(STDOUT, string, 60);
-			if(bytes != 60)
+			bytes = write(STDOUT, string, num_chars);
+			if(bytes != num_chars)
 				exit(-999);
 		}
 	}	
