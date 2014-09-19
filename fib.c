@@ -100,6 +100,7 @@ doFib(int n, int doPrint) /* Zoe and Paul drove in this function */
 }
 
 /* Zoe Drove Here */
+/* Taken from Bryant & O'Hall page 718 */
 pid_t Fork(void)
 {
 	pid_t pid;
@@ -108,3 +109,4 @@ pid_t Fork(void)
 		unix_error("Fork error");
 	return pid;
 }
+/* done with code excerpt */

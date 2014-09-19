@@ -123,5 +123,7 @@ Questions regarding Part 2
   You can also use a single signal handler to catch all three signals.  Is
   there a design advantage of one over the other?  Explain your answer.
 
-
-
+	If there is only one handler then any other signals that are sent to
+        that handler are blocked. On the other hand, if you have separate
+        handlers for each signal type, then pending signals of different types
+        are not blocked.

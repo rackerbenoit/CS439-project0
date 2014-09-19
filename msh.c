@@ -114,6 +114,7 @@ int main(int argc, char **argv)
 /*
  * Fork - fork() wrapper
  * Paul drove here
+ * Taken from Bryant & O'Hall page 718 */
  */
 pid_t Fork(void)
 {
@@ -122,6 +123,7 @@ pid_t Fork(void)
                 unix_error("Fork error");
         return pid;
 }
+/* end code excerpt */
 
 /* 
  * eval - Evaluate the command line that the user has just typed in
@@ -134,6 +136,7 @@ pid_t Fork(void)
  * background children don't receive SIGINT (SIGTSTP) from the kernel
  * when we type ctrl-c (ctrl-z) at the keyboard.  
 */
+/* Based off of Bryant & O'Hall page 735 */
 void eval(char *cmdline) 
 {
 	    //Zoe drove here
@@ -184,6 +187,7 @@ void eval(char *cmdline)
 
         return;				
 }
+/* end code excerpt */
 
 
 /* 
@@ -192,7 +196,8 @@ void eval(char *cmdline)
  * Return 1 if a builtin command was executed; return 0
  * if the argument passed in is *not* a builtin command.
  */
-//Zoe drove for this function
+/* Zoe drove for this function
+ * Based off of Bryant & O'Hall page 735 */
 int builtin_cmd(char **argv) 
 {
 	if (!strcmp(argv[0], "quit")) /* quit command */
@@ -216,6 +221,7 @@ int builtin_cmd(char **argv)
                 return 1;	
 	return 0;     /* not a builtin command */
 }
+/* end code excerpt */
 
 /* 
  * do_bgfg - Execute the builtin bg and fg commands
@@ -450,7 +456,7 @@ void sigtstp_handler(int sig)
     //If foreground job exists, suspend it
     if(pid != 0)
     {
-        if (kill(pid, SIGTSTP) < 0)
+        if (kill(-pid, SIGTSTP) < 0)
 		unix_error("kill error");
     }
 

@@ -94,7 +94,8 @@ int main(int argc, char **argv)
     exit(0); /* control never reaches here */
 }
 
-/* Fork wrapper - Paul drove here*/
+/* Fork wrapper - Paul drove here
+ * Taken from Bryant and O'Hall page 718 */
 pid_t Fork(void)
 {
 	pid_t pid;
@@ -111,6 +112,7 @@ pid_t Fork(void)
  * run the job in the context of the child. If the job is running in
  * the foreground, wait for it to terminate and then return. 
 */
+/* Taken from Bryant & O'Hall page 735 */
 void eval(char *cmdline) /* Zoe and Paul drove here */
 {
 	char *argv[MAXARGS]; 
@@ -147,6 +149,7 @@ void eval(char *cmdline) /* Zoe and Paul drove here */
 	}
 	return;
 }
+/* end code excerpt */
 
 
 /* 
@@ -156,6 +159,7 @@ void eval(char *cmdline) /* Zoe and Paul drove here */
  * if the argument passed in is *not* a builtin command.
  */
 /* Zoe drove here */
+/* Taken from Bryant & O'Hall page 735 */
 int builtin_cmd(char **argv) 
 {
 	if (!strcmp(argv[0], "quit")) /* quit command */
@@ -164,6 +168,7 @@ int builtin_cmd(char **argv)
 		return 1;
 	return 0;     		/* not a builtin command */
 }
+/* end code excerpt */
 
 /***********************
  * Other helper routines
