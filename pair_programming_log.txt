@@ -20,20 +20,29 @@ Paul 	30 min
 9/12 4:45pm - 8 Paul and Zoe, 3.25 hours
 Zoe     1 hr
 Paul    1 hr
-Zoe     1.25 hrs
+Zoe     45 min
+Paul 	30 min
 
-9/13 2pm - 6:30pm Paul and Zoe, 4.5 hours
-Zoe     1.5 hr
-Paul    1.5 hr
+9/13 2pm - 6:30pm Paul and Zoe, ~4.5 hours
+Zoe    	45 min 
+Paul    45 min
 Zoe     30 min
-Paul    1 hr
+Paul    30 min
+Zoe	40 min
+Paul 	45 min
+Zoe 	30 min
 
 9/15 8pm - 11:45pm Paul and Zoe, 3.75 hours
-Paul    1.5 hrs
-Zoe     2.25 hrs
+Paul    45 min
+Zoe	45 min
+Paul	1 hour
+Zoe     1 hour
+Paul	15 min
 
 9/16 Debugging 2pm - 6pm, 8 - 10pm (Paul left at 5pm for class, Zoe left at 6) Paul and Zoe, 6 hours
-Paul    2 hr
-Zoe     2 hrs
+Paul    1 hour
+Zoe 	1 hour
+Paul	1 hour
+Zoe     1 hour
 Paul	2 hrs
 

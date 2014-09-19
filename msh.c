@@ -1,7 +1,7 @@
 /* 
  * msh - A mini shell program with job control
  * 
- * <Put your name and login ID here>
+ * Zoe Lamb & Paul Benoit
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -140,7 +140,7 @@ pid_t Fork(void)
 void eval(char *cmdline) 
 {
 	    //Zoe drove here
-	    char *argv[MAXARGS];
+	char *argv[MAXARGS];
         char buf[MAXLINE];
         int bg;                 /* run in bg or fg? */
         pid_t pid;
@@ -151,38 +151,39 @@ void eval(char *cmdline)
         if (argv[0] == NULL)
                 return;         /* Ignore empty lines */
 
-	    // Is not a built-in command
+	/* Is not a built-in command */
         if (!builtin_cmd(argv))
         {
-        		sigemptyset(&mask);
-        		sigaddset(&mask, SIGCHLD);
-        		sigprocmask(SIG_BLOCK, &mask, NULL); // block
+        	sigemptyset(&mask);
+        	sigaddset(&mask, SIGCHLD);
+        	sigprocmask(SIG_BLOCK, &mask, NULL); /* block */
 		
                 if ((pid = Fork()) == 0)
-                { // child
-			         sigprocmask(SIG_UNBLOCK, &mask, NULL); // unblock in child
-			         // put child in new process group
-			         if (setpgid(0, 0) < 0)
-				            unix_error("setpgid error");	
-			         // load the program
-                     if (execve(argv[0], argv, environ) < 0 )
-                     {
-                            printf("%s: Command not found.\n", argv[0]);
-                            exit(0);
-                     }
+                { /* child */
+			sigprocmask(SIG_UNBLOCK, &mask, NULL); /* unblock in child */
+		        /* put child in new process group */
+		        if (setpgid(0, 0) < 0)
+			        unix_error("setpgid error");	
+		        /* load the program */
+                	if (execve(argv[0], argv, environ) < 0 )
+               		{
+                        	printf("%s: Command not found.\n", argv[0]);
+                        	exit(0);
+                    	}
                 }
 
-		//Paul did some driving here
-                /* Parent waits for fg job to finish */
+		/* Paul did some driving here
+                 * Parent waits for fg job to finish */
 		addjob(jobs, pid, bg+1, cmdline);
-		sigprocmask(SIG_UNBLOCK, &mask, NULL); // unblock in parent
+		sigprocmask(SIG_UNBLOCK, &mask, NULL); /* unblock in parent */
 
-        //Enters if there is a foreground process
-        if (!bg){	
+        	/* Enters if there is a foreground process */
+        	if (!bg)
+		{	
 		        waitfg(pid);
-        }
-        else // child is running in the bg
-                printf("[%d] (%d) %s", (*getjobpid(jobs, pid)).jid, pid, cmdline);
+        	}
+	        else /* child is running in the bg */
+       			printf("[%d] (%d) %s", (*getjobpid(jobs, pid)).jid, pid, cmdline);
         }
 
         return;				
@@ -196,6 +197,7 @@ void eval(char *cmdline)
  * Return 1 if a builtin command was executed; return 0
  * if the argument passed in is *not* a builtin command.
  */
+
 /* Zoe drove for this function
  * Based off of Bryant & O'Hall page 735 */
 int builtin_cmd(char **argv) 
@@ -229,14 +231,15 @@ int builtin_cmd(char **argv)
  */
 void do_bgfg(char **argv) 
 {
-    // check for no <job> argument
+    /* check for no <job> argument */
     if (argv[1] == NULL)
     {
 	    fprintf(stdout, "%s command requires PID or %%jobid argument\n", argv[0]);
         return;
     }
 
-    // see if the <job> contains letters	
+    /* see if the <job> contains letters 	
+     * Zoe is driving */
     int i;
     for (i = 0; i < strlen(argv[1]); i++)
     {
@@ -248,37 +251,35 @@ void do_bgfg(char **argv)
     }
 
     pid_t pid;
-    char *firstCharPtr = argv[1]; // set ptr to start of <job> 
-    char firstChar = *firstCharPtr; // get the first char
-    char percent = '%'; //ascii value 37
+    char *firstCharPtr = argv[1]; /* set ptr to start of <job>  */
+    char firstChar = *firstCharPtr; /* get the first char */
+    char percent = '%'; 
     struct job_t *j;
-    int isJID = 0; //FALSE
+    int isJID = 0; /* FALSE */
 
-    // parse if is in the form of a JID
+    /* parse if is in the form of a JID */
     if(firstChar == percent)
     {
-        //fprintf(stdout, "Here now\n");
     	isJID = 1;
     	firstCharPtr++;
     	int jid = atoi(firstCharPtr);
-        j = getjobjid(jobs, jid); //(pid_t)atoi(string);
+        j = getjobjid(jobs, jid); 
     }
-    else //If in form of pid
+    else /* If in form of pid */
     {
-        //fprintf(stdout, "Got here\n");
         pid = (pid_t)atoi(argv[1]);
     	j = getjobpid(jobs, pid);
     }
 
 
-    // if the job does not exist
+    /* if the job does not exist - Zoe driving*/
     if (j == NULL){
-	   if (isJID) // if the JID is not valid
+	   if (isJID) /* if the JID is not valid */
 	   {
 	       fprintf(stdout, "%s: No such job\n", argv[1]); 
 	       return;
 	   }
-	   // else we were given an invalid PID
+	   /* else we were given an invalid PID */
 	   else
 	       fprintf(stdout, "(%d): No such process\n", pid);
 	   return;
@@ -286,10 +287,9 @@ void do_bgfg(char **argv)
 
     pid = j->pid;
 
-    //Zoe drove in the error hadling areas in this function
-    if(!strcmp(argv[0], "bg"))
+    /* Zoe drove in the error hadling areas in this function */
+    if(!strcmp(argv[0], "bg")) /* if is a bg command */
     {
-        //fprintf(stdout, "bg job\n");
         if((*j).state == ST){
               if (kill(-pid, SIGCONT) < 0) 
 		      unix_error("kill error");
@@ -298,9 +298,8 @@ void do_bgfg(char **argv)
         printf("[%d] (%d) %s", (*j).jid, pid, (*j).cmdline);
     }
 
-    else if(!strcmp(argv[0], "fg"))
+    else if(!strcmp(argv[0], "fg")) /* if is a fg command */
     {
-        //fprintf(stdout, "fg job\n");
         if((*j).state == ST){
               if (kill(-pid, SIGCONT) < 0) 
 		      unix_error("kill error");
@@ -314,11 +313,10 @@ void do_bgfg(char **argv)
 
 /* 
  * waitfg - Block until process pid is no longer the foreground process
- */
-//Paul drove here
+ * Paul drove here */
 void waitfg(pid_t pid)
 {
-	// while the pid is the fg process sleep the parent process
+	/* while the pid is the fg process sleep the parent process */
 	while (fgpid(jobs) == pid)
 	{
 		sleep(1);
@@ -342,18 +340,18 @@ void sigchld_handler(int sig) /* Zoe driving here */
 	pid_t pid;
 	int status;
 
-	// reap all terminated children, check for stopped children
+	/* reap all terminated children, check for stopped children */
 	while((pid = waitpid(-1, &status, WNOHANG|WUNTRACED)) > 0)
 	{
 		int idx, sig_int;
 		char terminated[] = "terminated by signal";
 		char stopped[] = "stopped by signal";
 		char *text;
-	    ssize_t bytes;
-	    const int STDOUT = 1;
+	    	ssize_t bytes;
+	    	const int STDOUT = 1;
 		idx = (getjobpid(jobs, pid))->jid;
 
-		//Delete jobs if the job terminated
+		/* Delete jobs if the job terminated */
 		if(WIFEXITED(status))
 		{
 			text = terminated;
@@ -361,43 +359,33 @@ void sigchld_handler(int sig) /* Zoe driving here */
 		    deletejob(jobs, pid);
 		}  
 		
-		// if child terminated b/c signal was not caught
+		/* if child terminated b/c signal was not caught */
 		if (WIFSIGNALED(status))
 		{
 			text = terminated;
-			sig_int = WTERMSIG(status); // get signal
-            		deletejob(jobs, pid); //Signals we cannot handle
+			sig_int = WTERMSIG(status); /* get signal */
+            		deletejob(jobs, pid); /* Signals we cannot handle */
 		}
-		// if the child is stopped
+		/* if the child is stopped */
 		if (WIFSTOPPED(status))
 		{
 			
 		    struct job_t *currentJob = getjobpid(jobs, pid);
 		    (*currentJob).state = ST; 
 			text = stopped;
-			sig_int = WSTOPSIG(status); // get signal
+			sig_int = WSTOPSIG(status); /* get signal */
 		}
 
-        //If the child is stopped OR terminated b/c signal was ignored
+        	/* If the child is stopped OR terminated b/c signal was ignored */
 		if(WIFSIGNALED(status) || WIFSTOPPED(status))
 		{
-		/* Paul driving */
-            /*char string[60];
-            int i;
-            for(i = 0; i < 60; i++)
-            {
-                string[i] = NULL;
-            }
-		*/	
-			// Zoe driving
 			char nullstring[] = "job";
 			int size = 1;
-			// If the string is truncated snprintf returns the number of chars required
+			/* If the string is truncated snprintf returns the number of chars required */
                         int num_chars = snprintf(nullstring, size, "Job [%d] (%d) %s %d\n", idx, pid, text, sig_int);
-			num_chars++; // was leaving off the '\n'
+			num_chars++; /* was leaving off the '\n' */
                         char string[num_chars];
                         snprintf(string, num_chars, "Job [%d] (%d) %s %d\n", idx, pid, text, sig_int);
-            //memset(string, '\0', sizeof(string));
 			bytes = write(STDOUT, string, num_chars);
 			if(bytes != num_chars)
 				exit(-999);
@@ -421,17 +409,16 @@ void sigchld_handler(int sig) /* Zoe driving here */
  * sigint_handler - The kernel sends a SIGINT to the shell whenver the
  *    user types ctrl-c at the keyboard.  Catch it and send it along
  *    to the foreground job.  
- */
- //Paul is Driving
+ *	Paul is driving */
 void sigint_handler(int sig) 
 {
     pid_t pid = fgpid(jobs);
 
-    //Kills foreground job is there a foreground job running
+    /* Kills foreground job is there a foreground job running */
     if(pid > 0)
     {
        if(kill(-pid, SIGINT) > 0) 
-		unix_error("kill error");//Error handling
+		unix_error("kill error");
     }
 
     return;
@@ -441,13 +428,12 @@ void sigint_handler(int sig)
  * sigtstp_handler - The kernel sends a SIGTSTP to the shell whenever
  *     the user types ctrl-z at the keyboard. Catch it and suspend the
  *     foreground job by sending it a SIGTSTP.  
- */
- //Paul is Driving
+ * Paul driving */
 void sigtstp_handler(int sig) 
 {
     pid_t pid = fgpid(jobs);
 
-    //If foreground job exists, suspend it
+    /* If foreground job exists, suspend it */
     if(pid != 0)
     {
         if (kill(-pid, SIGTSTP) < 0)
